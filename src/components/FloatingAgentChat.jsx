@@ -1,4 +1,5 @@
 import { useState } from "react";
+import { readJsonResponse } from "../utils/api";
 
 export function FloatingAgentChat({ role }) {
   const [open, setOpen] = useState(false);
@@ -21,7 +22,7 @@ export function FloatingAgentChat({ role }) {
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ message: userMessage, role }),
       });
-      const data = await response.json();
+      const data = await readJsonResponse(response);
       setMessages((current) => [...current, { from: "Exam Agent", text: data.reply || data.message }]);
     } catch (error) {
       setMessages((current) => [...current, { from: "Exam Agent", text: error.message }]);

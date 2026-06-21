@@ -1,4 +1,5 @@
 import { useEffect, useState } from "react";
+import { readJsonResponse } from "../utils/api";
 
 export function useDatabaseStatus() {
   const [dbStatus, setDbStatus] = useState({ state: "checking", text: "Checking database" });
@@ -7,7 +8,7 @@ export function useDatabaseStatus() {
     let isActive = true;
 
     fetch("/api/health")
-      .then((response) => response.json())
+      .then(readJsonResponse)
       .then((data) => {
         if (!isActive) return;
 

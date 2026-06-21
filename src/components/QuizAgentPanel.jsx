@@ -1,4 +1,5 @@
 import { useState } from "react";
+import { readJsonResponse } from "../utils/api";
 
 export function QuizAgentPanel({ onToast }) {
   const [topic, setTopic] = useState("Python loops");
@@ -18,7 +19,7 @@ export function QuizAgentPanel({ onToast }) {
           types: ["mcq", "msq", "theory", "programming", "true-false", "file-drop"],
         }),
       });
-      const data = await response.json();
+      const data = await readJsonResponse(response);
       if (!data.ok) throw new Error(data.message);
       setQuestions(data.quiz);
       onToast(data.fallback ? "Quiz agent used local fallback" : "Quiz agent generated questions");
