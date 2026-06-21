@@ -65,6 +65,34 @@ export const students = [
   { name: "Kabir Shah", roll: "LST26CS032", exam: "Secure Systems Quiz", score: "91%", status: "Submitted" },
 ];
 
+export const subjectLeaderboards = {
+  overall: [
+    { name: "Kabir Shah", roll: "LST26CS032", score: 92 },
+    { name: "Aarav Reddy", roll: "LST26CS014", score: 88 },
+    { name: "Nisha Varma", roll: "LST26CS021", score: 84 },
+  ],
+  linux: [
+    { name: "Aarav Reddy", roll: "LST26CS014", score: 91 },
+    { name: "Kabir Shah", roll: "LST26CS032", score: 89 },
+    { name: "Nisha Varma", roll: "LST26CS021", score: 81 },
+  ],
+  networking: [
+    { name: "Kabir Shah", roll: "LST26CS032", score: 94 },
+    { name: "Nisha Varma", roll: "LST26CS021", score: 86 },
+    { name: "Aarav Reddy", roll: "LST26CS014", score: 82 },
+  ],
+  database: [
+    { name: "Nisha Varma", roll: "LST26CS021", score: 90 },
+    { name: "Aarav Reddy", roll: "LST26CS014", score: 87 },
+    { name: "Kabir Shah", roll: "LST26CS032", score: 85 },
+  ],
+  frontend: [
+    { name: "Kabir Shah", roll: "LST26CS032", score: 93 },
+    { name: "Aarav Reddy", roll: "LST26CS014", score: 86 },
+    { name: "Nisha Varma", roll: "LST26CS021", score: 83 },
+  ],
+};
+
 export const questionBank = [
   { module: "Reverse Engineered Curriculum", type: "Case Study", difficulty: "Medium", status: "Approved" },
   { module: "Internship Driven Learning", type: "Project Rubric", difficulty: "Advanced", status: "Review" },
@@ -84,17 +112,26 @@ export const examQuestions = [
     type: "Code",
     title: "Write a Python function that normalizes a list of numeric values.",
     starter: "def normalize(values):\n    # return min-max normalized values\n    pass",
+    answer: "Use min and max values, subtract the minimum from each item, and divide by the range max minus min.",
   },
   {
     id: "q3",
-    type: "Drag",
-    title: "Match each model concept to the correct description.",
-    pairs: ["Overfitting -> Low training error, poor test generalization", "Regularization -> Penalizes complexity"],
+    type: "Theory",
+    title: "Explain why train-test split is important before evaluating a machine learning model.",
+    answer: "Train-test split checks how well the model generalizes to unseen data and reduces misleading evaluation caused by testing on training data.",
   },
   {
     id: "q4",
+    type: "Drag",
+    title: "Match each model concept to the correct description.",
+    pairs: ["Overfitting -> Low training error, poor test generalization", "Regularization -> Penalizes complexity"],
+    answer: "Overfitting means low training error and poor test generalization. Regularization penalizes complexity.",
+  },
+  {
+    id: "q5",
     type: "Upload",
     title: "Upload a confusion-matrix diagram for the given prediction set.",
+    answer: "Manual review required.",
   },
 ];
 

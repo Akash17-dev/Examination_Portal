@@ -3,11 +3,10 @@ import { ExamModal } from "./ExamModal";
 import { ExamRoom } from "./ExamRoom";
 import { ToastStack } from "./ToastStack";
 import { PortalLayout } from "./layout/PortalLayout";
-import { CollegeInfoPanel } from "./panels/CollegeInfoPanel";
 import { ExamPanel } from "./panels/ExamPanel";
 import { HistoryPanel } from "./panels/HistoryPanel";
 import { ProfilePanel } from "./panels/ProfilePanel";
-import { ResultPanel } from "./panels/ResultPanel";
+import { StudentLeaderboardPanel } from "./panels/StudentLeaderboardPanel";
 import { TimelinePanel } from "./panels/TimelinePanel";
 import { useDashboardState } from "../hooks/useDashboardState";
 import { useToasts } from "../hooks/useToasts";
@@ -16,11 +15,17 @@ export function StudentDashboard({ user, onLogout }) {
   const { filter, filteredExams, modalOpen, setFilter, setModalOpen } = useDashboardState();
   const { messages, pushToast } = useToasts();
   const [activeExam, setActiveExam] = useState(null);
+  const [pendingExam, setPendingExam] = useState(null);
 
   function startAttempt(exam) {
     document.documentElement.requestFullscreen?.().catch(() => {});
     setActiveExam(exam);
     pushToast(`${exam.title} attempt started. Tab switches will be recorded.`);
+  }
+
+  function requestAttempt(exam) {
+    setPendingExam(exam);
+    setModalOpen(true);
   }
 
   function exitAttempt() {
@@ -67,20 +72,29 @@ export function StudentDashboard({ user, onLogout }) {
             <li className="done">Question set synced</li>
             <li>Exam window opens at 10:00 AM</li>
           </ul>
-          <button className="secondary-btn" onClick={() => setModalOpen(true)}>Start Mock Exam</button>
+          <button className="secondary-btn" onClick={() => requestAttempt({ title: "Mock Exam" })}>Start Mock Exam</button>
         </div>
       </section>
 
       <section className="content-grid">
-        <ExamPanel filter={filter} id="exams" onAttempt={startAttempt} setFilter={setFilter} exams={filteredExams} title="My Upcoming Exams" />
+        <ExamPanel filter={filter} id="exams" onAttempt={requestAttempt} setFilter={setFilter} exams={filteredExams} title="My Upcoming Exams" />
         <HistoryPanel />
         <ProfilePanel user={user} />
         <TimelinePanel />
-        <ResultPanel />
-        <CollegeInfoPanel />
+        <StudentLeaderboardPanel />
       </section>
 
-      {modalOpen && <ExamModal onClose={() => setModalOpen(false)} />}
+      {modalOpen && (
+        <ExamModal
+          onClose={() => setModalOpen(false)}
+          onStart={() => {
+            setModalOpen(false);
+            startAttempt(pendingExam || { title: "Mock Exam" });
+            setPendingExam(null);
+          }}
+          examTitle={pendingExam?.title || "Mock Exam"}
+        />
+      )}
       <ToastStack messages={messages} />
     </PortalLayout>
   );

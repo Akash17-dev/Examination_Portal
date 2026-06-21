@@ -2,7 +2,7 @@ import { useEffect, useRef } from "react";
 
 const focusableSelector = "button, [href], input, select, textarea, [tabindex]:not([tabindex='-1'])";
 
-export function ExamModal({ onClose }) {
+export function ExamModal({ examTitle = "Mock Exam", onClose, onStart }) {
   const modalRef = useRef(null);
 
   useEffect(() => {
@@ -46,14 +46,21 @@ export function ExamModal({ onClose }) {
           <img src="/assets/leapstart-logo.webp" alt="LeapStart logo" />
           <button aria-label="Close dialog" onClick={onClose}>x</button>
         </div>
-        <h2 id="mock-exam-title">Mock Exam Ready</h2>
-        <p>
-          This prototype flow verifies the learner, locks the test window, loads the question set, and
-          starts the timer.
-        </p>
+        <h2 id="mock-exam-title">{examTitle} Instructions</h2>
+        <p className="muted">Read these rules before starting. Activity is monitored during the exam.</p>
+        <div className="instruction-card">
+          <strong>Cheating warning</strong>
+          <ul>
+            <li>Do not switch tabs, open another window, or leave fullscreen mode.</li>
+            <li>Tab switches, fullscreen exits, and focus losses are recorded.</li>
+            <li>Webcam snapshot prompts may appear during the attempt.</li>
+            <li>Answers auto-save while online and sync again after reconnecting.</li>
+            <li>Submit only your own work. Theory answers are checked by meaning, not exact wording.</li>
+          </ul>
+        </div>
         <div className="modal-actions">
           <button className="secondary-btn" onClick={onClose}>Cancel</button>
-          <button className="primary-btn" onClick={onClose}>Enter Exam Room</button>
+          <button className="primary-btn" onClick={onStart}>I Understand, Start Exam</button>
         </div>
       </section>
     </div>

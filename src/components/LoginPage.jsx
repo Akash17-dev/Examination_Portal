@@ -44,30 +44,6 @@ export function LoginPage({ onLogin }) {
             A focused portal for students, faculty, and admins to manage secure assessments,
             quiz attempts, results, and academic workflows.
           </p>
-
-          <div className="login-showcase">
-            <div className="exam-preview-card main">
-              <div>
-                <span>Live exam</span>
-                <strong>AI Foundations Midterm</strong>
-              </div>
-              <b>22:30</b>
-            </div>
-            <div className="exam-preview-grid">
-              <div className="exam-preview-card">
-                <span>Auto-save</span>
-                <strong>Active</strong>
-              </div>
-              <div className="exam-preview-card">
-                <span>Questions</span>
-                <strong>42</strong>
-              </div>
-              <div className="exam-preview-card">
-                <span>Submissions</span>
-                <strong>128</strong>
-              </div>
-            </div>
-          </div>
         </div>
       </section>
 

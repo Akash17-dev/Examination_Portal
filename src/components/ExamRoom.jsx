@@ -18,6 +18,7 @@ export function ExamRoom({ examTitle = "AI Foundations Midterm", fullWindow = fa
   const [isFullscreen, setIsFullscreen] = useState(Boolean(document.fullscreenElement));
   const [online, setOnline] = useState(navigator.onLine);
   const [lastSaved, setLastSaved] = useState("Not saved yet");
+  const [result, setResult] = useState(null);
   const wasFullscreen = useRef(Boolean(document.fullscreenElement));
   const activeQuestion = examQuestions[activeIndex];
 
@@ -109,6 +110,72 @@ export function ExamRoom({ examTitle = "AI Foundations Midterm", fullWindow = fa
     });
   }
 
+  function normalizeText(value) {
+    return String(value || "")
+      .toLowerCase()
+      .replace(/[^a-z0-9\s]/g, " ")
+      .split(/\s+/)
+      .filter((word) => word.length > 3);
+  }
+
+  function meaningScore(studentAnswer, expectedAnswer) {
+    const studentWords = new Set(normalizeText(studentAnswer));
+    const expectedWords = normalizeText(expectedAnswer);
+    if (expectedWords.length === 0) return studentAnswer ? 1 : 0;
+
+    const matches = expectedWords.filter((word) => studentWords.has(word)).length;
+    return matches / expectedWords.length;
+  }
+
+  function evaluateQuestion(question) {
+    const studentAnswer = answers[question.id];
+
+    if (question.type === "MCQ") {
+      const correct = studentAnswer === question.answer;
+      return {
+        id: question.id,
+        title: question.title,
+        score: correct ? 1 : 0,
+        max: 1,
+        feedback: correct ? "Correct answer." : `Expected: ${question.answer}`,
+      };
+    }
+
+    if (["Theory", "Code", "Drag"].includes(question.type)) {
+      const ratio = meaningScore(studentAnswer, question.answer);
+      const score = ratio >= 0.55 ? 1 : ratio >= 0.32 ? 0.5 : 0;
+      return {
+        id: question.id,
+        title: question.title,
+        score,
+        max: 1,
+        feedback: score === 1
+          ? "Good answer. Meaning matches the expected answer."
+          : score === 0.5
+            ? "Partially correct. Add more key concepts from the expected answer."
+            : `Needs improvement. Expected meaning: ${question.answer}`,
+      };
+    }
+
+    return {
+      id: question.id,
+      title: question.title,
+      score: studentAnswer ? 1 : 0,
+      max: 1,
+      feedback: studentAnswer ? "File received for review." : "No file submitted.",
+    };
+  }
+
+  function submitExam() {
+    const details = examQuestions.map(evaluateQuestion);
+    const score = details.reduce((total, item) => total + item.score, 0);
+    const max = details.reduce((total, item) => total + item.max, 0);
+    const percentage = Math.round((score / max) * 100);
+
+    setResult({ details, score, max, percentage });
+    onToast(`Exam submitted. Score: ${percentage}%`);
+  }
+
   function renderQuestionInput() {
     if (activeQuestion.type === "MCQ") {
       return (
@@ -139,10 +206,27 @@ export function ExamRoom({ examTitle = "AI Foundations Midterm", fullWindow = fa
       );
     }
 
+    if (activeQuestion.type === "Theory") {
+      return (
+        <textarea
+          className="code-editor"
+          value={answers[activeQuestion.id] || ""}
+          onChange={(event) => updateAnswer(event.target.value)}
+          placeholder="Write your answer in your own words"
+        />
+      );
+    }
+
     if (activeQuestion.type === "Drag") {
       return (
         <div className="drag-mock">
           {activeQuestion.pairs.map((pair) => <span draggable key={pair}>{pair}</span>)}
+          <textarea
+            className="code-editor"
+            value={answers[activeQuestion.id] || ""}
+            onChange={(event) => updateAnswer(event.target.value)}
+            placeholder="Write the correct matches here"
+          />
         </div>
       );
     }
@@ -204,11 +288,29 @@ export function ExamRoom({ examTitle = "AI Foundations Midterm", fullWindow = fa
             </button>
             <button className="secondary-btn" onClick={() => setActiveIndex(Math.max(activeIndex - 1, 0))}>Previous</button>
             <button className="primary-btn" onClick={() => setActiveIndex(Math.min(activeIndex + 1, examQuestions.length - 1))}>Next</button>
+            <button className="primary-btn" onClick={submitExam}>Submit Exam</button>
           </div>
         </article>
       </div>
 
       <p className="muted">Answered {answeredCount} of {examQuestions.length}. Flagged {flagged.length} for review.</p>
+      {result && (
+        <section className="exam-result-panel" aria-label="Exam result">
+          <div>
+            <p className="eyebrow">Instant Evaluation</p>
+            <h2>{result.percentage}%</h2>
+            <p className="muted">Scored {result.score} out of {result.max}</p>
+          </div>
+          <div className="mini-list">
+            {result.details.map((item) => (
+              <div className="mini-item" key={item.id}>
+                <strong>{item.title}</strong>
+                <span>{item.score}/{item.max} · {item.feedback}</span>
+              </div>
+            ))}
+          </div>
+        </section>
+      )}
     </section>
   );
 }

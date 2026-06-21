@@ -6,8 +6,8 @@ import { toSectionId } from "../../utils/toSectionId";
 
 const navItemsByRole = {
   admin: ["Dashboard", "Users", "Cohorts", "Audit Log", "Search"],
-  faculty: ["Dashboard", "Exam Control", "Question Bank", "Students", "Analytics", "Audit Log"],
-  student: ["Dashboard", "Exams", "History", "Profile", "Schedule", "Results"],
+  faculty: ["Dashboard", "Exam Control", "Question Bank", "Leaderboard", "Profile", "Search"],
+  student: ["Dashboard", "Exams", "History", "Profile", "Schedule", "Leaderboard"],
 };
 
 export function PortalLayout({ user, onLogout, children }) {
@@ -92,9 +92,6 @@ export function PortalLayout({ user, onLogout, children }) {
                 </svg>
               )}
             </button>
-            <div className="session-chip">
-              <span>{roleTitle}</span>
-            </div>
             <button className="nav-action-btn logout-btn" onClick={onLogout}>Logout</button>
           </div>
         </div>

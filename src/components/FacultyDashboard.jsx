@@ -2,14 +2,12 @@ import { QuizBuilder } from "./QuizBuilder";
 import { QuizAgentPanel } from "./QuizAgentPanel";
 import { ToastStack } from "./ToastStack";
 import { PortalLayout } from "./layout/PortalLayout";
-import { AnalyticsPanel } from "./panels/AnalyticsPanel";
-import { AuditLogPanel } from "./panels/AuditLogPanel";
-import { CollegeInfoPanel } from "./panels/CollegeInfoPanel";
 import { ExamControlPanel } from "./panels/ExamControlPanel";
 import { FacultyAdvancedPanel } from "./panels/FacultyAdvancedPanel";
+import { FacultyLeaderboardPanel } from "./panels/FacultyLeaderboardPanel";
+import { FacultyProfilePanel } from "./panels/FacultyProfilePanel";
 import { QuestionBankPanel } from "./panels/QuestionBankPanel";
 import { SearchPanel } from "./panels/SearchPanel";
-import { StudentsPanel } from "./panels/StudentsPanel";
 import { useToasts } from "../hooks/useToasts";
 
 export function FacultyDashboard({ user, onLogout }) {
@@ -24,7 +22,7 @@ export function FacultyDashboard({ user, onLogout }) {
           <p>{user.department} faculty dashboard for project-first evaluation and exam operations.</p>
           <div className="metric-row" aria-label="Faculty metrics">
             <div><strong>12</strong><span>Active exams</span></div>
-            <div><strong>128</strong><span>Students mapped</span></div>
+            <div><strong>128</strong><span>Submissions reviewed</span></div>
             <div><strong>40+</strong><span>Rubrics ready</span></div>
           </div>
         </div>
@@ -48,12 +46,10 @@ export function FacultyDashboard({ user, onLogout }) {
         <QuizBuilder onToast={pushToast} />
         <QuizAgentPanel onToast={pushToast} />
         <QuestionBankPanel />
+        <FacultyLeaderboardPanel teacher={user} />
+        <FacultyProfilePanel teacher={user} />
         <FacultyAdvancedPanel onToast={pushToast} />
-        <AnalyticsPanel />
-        <StudentsPanel />
-        <AuditLogPanel />
         <SearchPanel />
-        <CollegeInfoPanel />
       </section>
       <ToastStack messages={messages} />
     </PortalLayout>
