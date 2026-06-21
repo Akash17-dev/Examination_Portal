@@ -1,6 +1,13 @@
 # LeapStart Examination Portal Prototype
 
-Standalone HTML prototype for the LeapStart School of Technology Examination Portal.
+React prototype for the LeapStart School of Technology Examination Portal.
+
+## Mock Login
+
+The dashboard is protected by a mock login gate. Without a valid mock session, the app shows only the login page.
+
+- Student: `student@leapstart.in` / `student123`
+- Faculty: `faculty@leapstart.in` / `faculty123`
 
 ## Extracted from leapstart.in
 
@@ -13,8 +20,9 @@ Standalone HTML prototype for the LeapStart School of Technology Examination Por
 
 ## Run
 
-Open `index.html` in a browser, or serve the folder locally:
+Install dependencies and run the React app:
 
 ```bash
-python3 -m http.server 8080
+npm install
+npm run dev
 ```

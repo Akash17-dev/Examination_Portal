@@ -26,13 +26,151 @@ body {
   color: var(--ink);
 }
 
+#root {
+  min-height: 100vh;
+}
+
 button,
-select {
+select,
+input {
   font: inherit;
 }
 
 button {
   cursor: pointer;
+}
+
+.login-page {
+  min-height: 100vh;
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) minmax(360px, 520px);
+  background:
+    linear-gradient(125deg, rgba(7, 25, 38, 0.9), rgba(8, 122, 168, 0.82)),
+    url("assets/leapstart-hero.svg") center / cover;
+}
+
+.login-brand-panel {
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  gap: 20px;
+  padding: clamp(28px, 6vw, 72px);
+  color: var(--white);
+}
+
+.login-brand-panel img {
+  width: 210px;
+  height: auto;
+}
+
+.login-brand-panel h1 {
+  max-width: 760px;
+  font-size: clamp(36px, 6vw, 72px);
+}
+
+.login-brand-panel p {
+  max-width: 660px;
+  color: rgba(255, 255, 255, 0.76);
+  font-size: 18px;
+  line-height: 1.6;
+}
+
+.login-facts {
+  display: grid;
+  gap: 10px;
+  max-width: 660px;
+  padding: 18px;
+  border: 1px solid rgba(255, 255, 255, 0.16);
+  border-radius: 8px;
+  background: rgba(255, 255, 255, 0.1);
+  color: rgba(255, 255, 255, 0.78);
+}
+
+.login-facts strong {
+  color: var(--white);
+}
+
+.login-card {
+  align-self: center;
+  margin: 28px;
+  padding: 28px;
+  border-radius: 8px;
+  background: var(--white);
+  box-shadow: 0 24px 80px rgba(7, 25, 38, 0.26);
+}
+
+.login-logo {
+  width: 170px;
+  height: auto;
+  margin-bottom: 20px;
+}
+
+.login-tabs {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 6px;
+  margin: 20px 0;
+  padding: 4px;
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  background: #f8fbfd;
+}
+
+.login-tabs button {
+  border: 0;
+  border-radius: 6px;
+  background: transparent;
+  color: var(--muted);
+  padding: 10px;
+  font-weight: 800;
+}
+
+.login-tabs button.active {
+  background: var(--navy);
+  color: var(--white);
+}
+
+.login-form {
+  display: grid;
+  gap: 14px;
+}
+
+.login-form label {
+  display: grid;
+  gap: 8px;
+  color: var(--ink);
+  font-size: 14px;
+  font-weight: 800;
+}
+
+.login-form input {
+  width: 100%;
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  padding: 12px;
+  color: var(--ink);
+  background: var(--white);
+}
+
+.form-error {
+  margin: 0;
+  color: #b42318;
+  font-weight: 800;
+}
+
+.demo-credentials {
+  display: grid;
+  gap: 6px;
+  margin-top: 18px;
+  padding: 14px;
+  border-radius: 8px;
+  background: #f1f8fc;
+  color: var(--muted);
+  font-size: 13px;
+}
+
+.demo-credentials strong {
+  color: var(--ink);
 }
 
 .app-shell {
@@ -156,6 +294,26 @@ h1 {
   gap: 12px;
   flex-wrap: wrap;
   justify-content: flex-end;
+}
+
+.session-chip {
+  display: grid;
+  gap: 2px;
+  padding: 9px 12px;
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  background: var(--white);
+}
+
+.session-chip span {
+  font-weight: 800;
+}
+
+.session-chip strong {
+  color: var(--blue-dark);
+  font-size: 12px;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
 }
 
 .role-switch {
@@ -471,6 +629,37 @@ th {
   margin: 0;
 }
 
+.mini-list {
+  display: grid;
+  gap: 12px;
+  margin-top: 18px;
+}
+
+.mini-item {
+  display: grid;
+  gap: 4px;
+  padding: 14px;
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  background: #fbfdff;
+}
+
+.mini-item span {
+  color: var(--muted);
+  font-size: 13px;
+  line-height: 1.4;
+}
+
+.dialog-backdrop {
+  position: fixed;
+  inset: 0;
+  z-index: 100;
+  display: grid;
+  place-items: center;
+  padding: 16px;
+  background: rgba(7, 25, 38, 0.5);
+}
+
 .exam-modal {
   max-width: 520px;
   width: calc(100% - 32px);
@@ -478,13 +667,15 @@ th {
   border-radius: 8px;
   padding: 0;
   box-shadow: 0 24px 80px rgba(7, 25, 38, 0.26);
+  background: var(--white);
 }
 
 .exam-modal::backdrop {
   background: rgba(7, 25, 38, 0.5);
 }
 
-.exam-modal form {
+.exam-modal form,
+.exam-modal {
   padding: 24px;
 }
 
@@ -514,6 +705,14 @@ th {
 }
 
 @media (max-width: 1120px) {
+  .login-page {
+    grid-template-columns: 1fr;
+  }
+
+  .login-card {
+    align-self: auto;
+  }
+
   .app-shell {
     grid-template-columns: 1fr;
   }
@@ -543,8 +742,14 @@ th {
 
 @media (max-width: 720px) {
   .workspace,
-  .sidebar {
+  .sidebar,
+  .login-brand-panel,
+  .login-card {
     padding: 16px;
+  }
+
+  .login-card {
+    margin: 16px;
   }
 
   .topbar,
