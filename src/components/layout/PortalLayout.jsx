@@ -17,6 +17,12 @@ export function PortalLayout({ user, onLogout, children }) {
   const toggleTimer = useRef(null);
   const navItems = navItemsByRole[user.role] || navItemsByRole.student;
   const roleTitle = `${user.role.charAt(0).toUpperCase()}${user.role.slice(1)} Portal`;
+  const initials = user.name
+    .split(" ")
+    .map((part) => part[0])
+    .join("")
+    .slice(0, 2)
+    .toUpperCase();
   const nextTheme = theme === "dark" ? "light" : "dark";
 
   useEffect(() => {
@@ -95,8 +101,17 @@ export function PortalLayout({ user, onLogout, children }) {
       </header>
       <main className="workspace horizontal-workspace">
         <div className="page-title">
-          <p className="eyebrow">LeapStart School of Technology</p>
-          <h1>{user.role === "student" ? "Student Examination Portal" : user.role === "faculty" ? "Faculty Examination Portal" : "Admin Examination Portal"}</h1>
+          <div>
+            <p className="eyebrow">LeapStart School of Technology</p>
+            <h1>{user.role === "student" ? "Student Examination Portal" : user.role === "faculty" ? "Faculty Examination Portal" : "Admin Examination Portal"}</h1>
+          </div>
+          <div className="page-user-card" aria-label="Signed in user">
+            <span className="user-avatar">{initials}</span>
+            <div>
+              <strong>{user.name}</strong>
+              <small>{roleTitle}</small>
+            </div>
+          </div>
         </div>
         {children}
         <FloatingAgentChat role={user.role} />

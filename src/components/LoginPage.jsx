@@ -29,27 +29,56 @@ export function LoginPage({ onLogin }) {
     }
   }
 
+  const roleLabel = role.charAt(0).toUpperCase() + role.slice(1);
+
   return (
     <main className="login-page">
       <section className="login-brand-panel">
-        <img src="/assets/leapstart-logo-white.webp" alt="LeapStart logo" />
-        <span className="status-pill">Prototype Access</span>
-        <h1>LeapStart School of Technology Examination Portal</h1>
-        <p>
-          Login is required before entering the student or faculty workspace. This prototype uses mock
-          accounts only.
-        </p>
-        <div className="login-facts">
-          <strong>Four-year on-campus Computer Science program</strong>
-          <span>Specialization in Data Science and Artificial Intelligence</span>
-          <span>Experiential learning, industry mentors, projects, and internships</span>
+        <div className="login-orb login-orb-one" />
+        <div className="login-orb login-orb-two" />
+        <div className="login-brand-content">
+          <img src="/assets/leapstart-logo-white.webp" alt="LeapStart logo" />
+          <span className="status-pill">Online Examination Conductor</span>
+          <h1>Conduct exams with calm, clarity, and control.</h1>
+          <p>
+            A focused portal for students, faculty, and admins to manage secure assessments,
+            quiz attempts, results, and academic workflows.
+          </p>
+
+          <div className="login-showcase">
+            <div className="exam-preview-card main">
+              <div>
+                <span>Live exam</span>
+                <strong>AI Foundations Midterm</strong>
+              </div>
+              <b>22:30</b>
+            </div>
+            <div className="exam-preview-grid">
+              <div className="exam-preview-card">
+                <span>Auto-save</span>
+                <strong>Active</strong>
+              </div>
+              <div className="exam-preview-card">
+                <span>Questions</span>
+                <strong>42</strong>
+              </div>
+              <div className="exam-preview-card">
+                <span>Submissions</span>
+                <strong>128</strong>
+              </div>
+            </div>
+          </div>
         </div>
       </section>
 
       <section className="login-card" aria-label="Login form">
-        <img className="login-logo" src="/assets/leapstart-logo.webp" alt="LeapStart logo" />
-        <p className="eyebrow">Secure Access</p>
-        <h2>{role === "student" ? "Student Login" : "Faculty Login"}</h2>
+        <div className="login-card-head">
+          <img className="login-logo" src="/assets/leapstart-logo.webp" alt="LeapStart logo" />
+          <div>
+            <p className="eyebrow">Secure Access</p>
+            <h2>{roleLabel} Login</h2>
+          </div>
+        </div>
 
         <div className="login-tabs" role="tablist" aria-label="Choose login type">
           <button className={role === "student" ? "active" : ""} onClick={() => switchRole("student")} type="button">
@@ -65,16 +94,20 @@ export function LoginPage({ onLogin }) {
 
         <form onSubmit={handleSubmit} className="login-form">
           <label>
-            Email
+            <span>Email address</span>
             <input value={email} onChange={(event) => setEmail(event.target.value)} type="email" required />
           </label>
           <label>
-            Password
+            <span>Password</span>
             <input value={password} onChange={(event) => setPassword(event.target.value)} type="password" required />
           </label>
           {error && <p className="form-error">{error}</p>}
-          <button className="primary-btn" disabled={isSubmitting} type="submit">
-            {isSubmitting ? "Checking..." : "Login to Portal"}
+          <button className="login-submit" disabled={isSubmitting} type="submit">
+            <span>{isSubmitting ? "Checking..." : `Enter ${roleLabel} Portal`}</span>
+            <svg aria-hidden="true" viewBox="0 0 24 24">
+              <path d="M5 12h14" />
+              <path d="m13 6 6 6-6 6" />
+            </svg>
           </button>
         </form>
 
