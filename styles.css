@@ -316,6 +316,48 @@ h1 {
   text-transform: uppercase;
 }
 
+.db-chip {
+  display: grid;
+  gap: 2px;
+  max-width: 260px;
+  padding: 9px 12px;
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  background: var(--white);
+}
+
+.db-chip span {
+  color: var(--muted);
+  font-size: 12px;
+  font-weight: 800;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+
+.db-chip strong {
+  color: var(--muted);
+  font-size: 13px;
+  line-height: 1.35;
+}
+
+.db-chip.connected {
+  border-color: #9de7bf;
+  background: #effcf5;
+}
+
+.db-chip.connected strong {
+  color: #05603a;
+}
+
+.db-chip.error {
+  border-color: #f4b8b2;
+  background: #fff3f1;
+}
+
+.db-chip.error strong {
+  color: #b42318;
+}
+
 .role-switch {
   display: flex;
   padding: 4px;

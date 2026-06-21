@@ -26,3 +26,6 @@ Install dependencies and run the React app:
 npm install
 npm run dev
 ```
+
+The React app runs through Vite and the API server runs on `http://localhost:4000`.
+Database connection settings live in `.env`; use `.env.example` as the template.

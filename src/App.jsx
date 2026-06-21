@@ -1,4 +1,4 @@
-import React, { useMemo, useState } from "react";
+import React, { useEffect, useMemo, useState } from "react";
 
 const users = [
   {
@@ -287,6 +287,30 @@ function FacultyDashboard({ user, onLogout }) {
 }
 
 function PortalLayout({ user, onLogout, children }) {
+  const [dbStatus, setDbStatus] = useState({ state: "checking", text: "Checking database" });
+
+  useEffect(() => {
+    let isActive = true;
+
+    fetch("/api/health")
+      .then((response) => response.json())
+      .then((data) => {
+        if (!isActive) return;
+        setDbStatus({
+          state: data.ok ? "connected" : "error",
+          text: data.ok ? `MongoDB connected: ${data.database}` : data.message,
+        });
+      })
+      .catch((error) => {
+        if (!isActive) return;
+        setDbStatus({ state: "error", text: error.message });
+      });
+
+    return () => {
+      isActive = false;
+    };
+  }, []);
+
   return (
     <div className="app-shell">
       <Sidebar user={user} />
@@ -297,6 +321,10 @@ function PortalLayout({ user, onLogout, children }) {
             <h1>{user.role === "student" ? "Student Examination Portal" : "Faculty Examination Portal"}</h1>
           </div>
           <div className="topbar-actions">
+            <div className={`db-chip ${dbStatus.state}`}>
+              <span>Database</span>
+              <strong>{dbStatus.text}</strong>
+            </div>
             <div className="session-chip">
               <span>{user.name}</span>
               <strong>{user.role}</strong>
