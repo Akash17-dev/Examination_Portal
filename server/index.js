@@ -3,6 +3,7 @@ require("dotenv").config();
 const cors = require("cors");
 const express = require("express");
 const { closeDatabase, connectToDatabase, getDatabase } = require("./db");
+const { defaultExams } = require("./defaultData");
 const { callGemini, extractJson } = require("./gemini");
 
 const app = express();
@@ -34,40 +35,98 @@ app.get("/api/health", async (_request, response) => {
 app.get("/api/exams", async (_request, response) => {
   try {
     const db = await getDatabase();
-    const exams = await db.collection("exams").find({}).limit(50).toArray();
+    const collection = db.collection("exams");
+    const count = await collection.countDocuments();
+    if (count === 0) {
+      await collection.insertMany(defaultExams.map((exam) => ({ ...exam, seeded: true })));
+    }
+    const exams = await collection.find({}).sort({ createdAt: -1, id: -1 }).limit(100).toArray();
     response.json({ ok: true, exams });
   } catch (error) {
     response.status(500).json({ ok: false, message: error.message });
   }
 });
 
-app.post("/api/exams/seed", async (_request, response) => {
-  const sampleExams = [
-    {
-      course: "ai",
-      tag: "AI and ML",
-      title: "AI Foundations Midterm",
-      detail: "60 questions, coding task, and short case analysis.",
-      date: "2026-06-24",
-      time: "10:00 AM",
-      status: "Ready",
-    },
-    {
-      course: "python",
-      tag: "Python and SQL",
-      title: "Data Wrangling Lab",
-      detail: "Hands-on notebook submission with SQL validation.",
-      date: "2026-06-28",
-      time: "2:00 PM",
-      status: "Scheduled",
-    },
-  ];
+app.post("/api/exams", async (request, response) => {
+  try {
+    const db = await getDatabase();
+    const nextExam = {
+      ...request.body,
+      id: request.body.id || Date.now(),
+      createdAt: new Date().toISOString(),
+      updatedAt: new Date().toISOString(),
+    };
+    await db.collection("exams").insertOne(nextExam);
+    response.status(201).json({ ok: true, exam: nextExam });
+  } catch (error) {
+    response.status(500).json({ ok: false, message: error.message });
+  }
+});
 
+app.delete("/api/exams", async (request, response) => {
+  try {
+    const id = request.query.id;
+    if (!id) {
+      response.status(400).json({ ok: false, message: "Exam id is required." });
+      return;
+    }
+
+    const db = await getDatabase();
+    await db.collection("exams").deleteOne({ id: Number.isNaN(Number(id)) ? id : Number(id) });
+    response.json({ ok: true });
+  } catch (error) {
+    response.status(500).json({ ok: false, message: error.message });
+  }
+});
+
+app.get("/api/quizzes", async (_request, response) => {
+  try {
+    const db = await getDatabase();
+    const quizzes = await db.collection("quizzes").find({}).sort({ createdAt: -1, id: -1 }).limit(100).toArray();
+    response.json({ ok: true, quizzes });
+  } catch (error) {
+    response.status(500).json({ ok: false, message: error.message });
+  }
+});
+
+app.post("/api/quizzes", async (request, response) => {
+  try {
+    const db = await getDatabase();
+    const nextQuiz = {
+      ...request.body,
+      id: request.body.id || Date.now(),
+      createdAt: new Date().toISOString(),
+      updatedAt: new Date().toISOString(),
+    };
+    await db.collection("quizzes").insertOne(nextQuiz);
+    response.status(201).json({ ok: true, quiz: nextQuiz });
+  } catch (error) {
+    response.status(500).json({ ok: false, message: error.message });
+  }
+});
+
+app.delete("/api/quizzes", async (request, response) => {
+  try {
+    const id = request.query.id;
+    if (!id) {
+      response.status(400).json({ ok: false, message: "Quiz id is required." });
+      return;
+    }
+
+    const db = await getDatabase();
+    await db.collection("quizzes").deleteOne({ id: Number.isNaN(Number(id)) ? id : Number(id) });
+    response.json({ ok: true });
+  } catch (error) {
+    response.status(500).json({ ok: false, message: error.message });
+  }
+});
+
+app.post("/api/exams/seed", async (_request, response) => {
   try {
     const db = await getDatabase();
     await db.collection("exams").deleteMany({});
-    await db.collection("exams").insertMany(sampleExams);
-    response.json({ ok: true, inserted: sampleExams.length });
+    await db.collection("exams").insertMany(defaultExams.map((exam) => ({ ...exam, seeded: true })));
+    response.json({ ok: true, inserted: defaultExams.length });
   } catch (error) {
     response.status(500).json({ ok: false, message: error.message });
   }

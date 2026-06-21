@@ -1,0 +1,45 @@
+const defaultExams = [
+  {
+    id: 1,
+    course: "ai",
+    tag: "AI and ML",
+    title: "AI Foundations Midterm",
+    detail: "60 questions, coding task, and short case analysis.",
+    date: "Jun 24, 2026",
+    time: "10:00 AM",
+    status: "Ready",
+    durationMinutes: 60,
+    attemptLimit: 1,
+    questions: [],
+  },
+  {
+    id: 2,
+    course: "python",
+    tag: "Python and SQL",
+    title: "Data Wrangling Lab",
+    detail: "Hands-on notebook submission with SQL validation.",
+    date: "Jun 28, 2026",
+    time: "2:00 PM",
+    status: "Scheduled",
+    durationMinutes: 60,
+    attemptLimit: 1,
+    questions: [],
+  },
+  {
+    id: 3,
+    course: "cyber",
+    tag: "Cybersecurity",
+    title: "Secure Systems Quiz",
+    detail: "Scenario-based questions on threat models and access control.",
+    date: "Jul 02, 2026",
+    time: "11:30 AM",
+    status: "Draft",
+    durationMinutes: 60,
+    attemptLimit: 1,
+    questions: [],
+  },
+];
+
+module.exports = {
+  defaultExams,
+};

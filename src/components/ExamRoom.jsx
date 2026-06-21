@@ -7,11 +7,16 @@ function formatTime(seconds) {
   return `${mins}:${secs}`;
 }
 
-export function ExamRoom({ examTitle = "AI Foundations Midterm", fullWindow = false, onExit, onToast }) {
+function getQuestionType(question) {
+  return String(question.type || "").toLowerCase();
+}
+
+export function ExamRoom({ examTitle = "AI Foundations Midterm", durationMinutes = 24, questions, fullWindow = false, onExit, onToast }) {
+  const questionSet = Array.isArray(questions) && questions.length > 0 ? questions : examQuestions;
   const [activeIndex, setActiveIndex] = useState(0);
   const [answers, setAnswers] = useState({});
   const [flagged, setFlagged] = useState([]);
-  const [secondsLeft, setSecondsLeft] = useState(24 * 60);
+  const [secondsLeft, setSecondsLeft] = useState((Number(durationMinutes) || 24) * 60);
   const [tabWarnings, setTabWarnings] = useState(0);
   const [fullscreenExits, setFullscreenExits] = useState(0);
   const [focusLosses, setFocusLosses] = useState(0);
@@ -20,9 +25,13 @@ export function ExamRoom({ examTitle = "AI Foundations Midterm", fullWindow = fa
   const [lastSaved, setLastSaved] = useState("Not saved yet");
   const [result, setResult] = useState(null);
   const wasFullscreen = useRef(Boolean(document.fullscreenElement));
-  const activeQuestion = examQuestions[activeIndex];
+  const activeQuestion = questionSet[activeIndex];
 
   const answeredCount = useMemo(() => Object.keys(answers).length, [answers]);
+
+  useEffect(() => {
+    setSecondsLeft((Number(durationMinutes) || 24) * 60);
+  }, [durationMinutes]);
 
   useEffect(() => {
     const timer = window.setInterval(() => setSecondsLeft((current) => Math.max(current - 1, 0)), 1000);
@@ -129,26 +138,43 @@ export function ExamRoom({ examTitle = "AI Foundations Midterm", fullWindow = fa
 
   function evaluateQuestion(question) {
     const studentAnswer = answers[question.id];
+    const questionType = getQuestionType(question);
 
-    if (question.type === "MCQ") {
+    if (["mcq", "true-false"].includes(questionType)) {
       const correct = studentAnswer === question.answer;
       return {
         id: question.id,
         title: question.title,
-        score: correct ? 1 : 0,
-        max: 1,
+        score: correct ? Number(question.marks) || 1 : 0,
+        max: Number(question.marks) || 1,
         feedback: correct ? "Correct answer." : `Expected: ${question.answer}`,
       };
     }
 
-    if (["Theory", "Code", "Drag"].includes(question.type)) {
+    if (questionType === "msq") {
+      const expected = Array.isArray(question.answer)
+        ? question.answer
+        : String(question.answer || "").split(",").map((item) => item.trim()).filter(Boolean);
+      const selected = Array.isArray(studentAnswer) ? studentAnswer : [];
+      const correct = expected.length > 0 && expected.every((item) => selected.includes(item)) && selected.every((item) => expected.includes(item));
+      return {
+        id: question.id,
+        title: question.title,
+        score: correct ? Number(question.marks) || 1 : 0,
+        max: Number(question.marks) || 1,
+        feedback: correct ? "Correct answer." : `Expected: ${expected.join(", ")}`,
+      };
+    }
+
+    if (["theory", "programming", "code", "drag"].includes(questionType)) {
       const ratio = meaningScore(studentAnswer, question.answer);
+      const marks = Number(question.marks) || 1;
       const score = ratio >= 0.55 ? 1 : ratio >= 0.32 ? 0.5 : 0;
       return {
         id: question.id,
         title: question.title,
-        score,
-        max: 1,
+        score: score * marks,
+        max: marks,
         feedback: score === 1
           ? "Good answer. Meaning matches the expected answer."
           : score === 0.5
@@ -167,7 +193,7 @@ export function ExamRoom({ examTitle = "AI Foundations Midterm", fullWindow = fa
   }
 
   function submitExam() {
-    const details = examQuestions.map(evaluateQuestion);
+    const details = questionSet.map(evaluateQuestion);
     const score = details.reduce((total, item) => total + item.score, 0);
     const max = details.reduce((total, item) => total + item.max, 0);
     const percentage = Math.round((score / max) * 100);
@@ -177,10 +203,13 @@ export function ExamRoom({ examTitle = "AI Foundations Midterm", fullWindow = fa
   }
 
   function renderQuestionInput() {
-    if (activeQuestion.type === "MCQ") {
+    const questionType = getQuestionType(activeQuestion);
+
+    if (["mcq", "true-false"].includes(questionType)) {
+      const choices = activeQuestion.choices || activeQuestion.options || [];
       return (
         <div className="choice-list">
-          {activeQuestion.choices.map((choice) => (
+          {choices.map((choice) => (
             <label className="choice-card" key={choice}>
               <input
                 checked={answers[activeQuestion.id] === choice}
@@ -195,18 +224,44 @@ export function ExamRoom({ examTitle = "AI Foundations Midterm", fullWindow = fa
       );
     }
 
-    if (activeQuestion.type === "Code") {
+    if (questionType === "msq") {
+      const choices = activeQuestion.choices || activeQuestion.options || [];
+      const current = Array.isArray(answers[activeQuestion.id]) ? answers[activeQuestion.id] : [];
+
+      return (
+        <div className="choice-list">
+          {choices.map((choice) => (
+            <label className="choice-card" key={choice}>
+              <input
+                checked={current.includes(choice)}
+                onChange={(event) => {
+                  updateAnswer(
+                    event.target.checked
+                      ? [...current, choice]
+                      : current.filter((item) => item !== choice)
+                  );
+                }}
+                type="checkbox"
+              />
+              {choice}
+            </label>
+          ))}
+        </div>
+      );
+    }
+
+    if (["code", "programming"].includes(questionType)) {
       return (
         <textarea
           className="code-editor"
-          value={answers[activeQuestion.id] || activeQuestion.starter}
+          value={answers[activeQuestion.id] || activeQuestion.starter || ""}
           onChange={(event) => updateAnswer(event.target.value)}
           spellCheck="false"
         />
       );
     }
 
-    if (activeQuestion.type === "Theory") {
+    if (questionType === "theory") {
       return (
         <textarea
           className="code-editor"
@@ -217,7 +272,7 @@ export function ExamRoom({ examTitle = "AI Foundations Midterm", fullWindow = fa
       );
     }
 
-    if (activeQuestion.type === "Drag") {
+    if (questionType === "drag") {
       return (
         <div className="drag-mock">
           {activeQuestion.pairs.map((pair) => <span draggable key={pair}>{pair}</span>)}
@@ -267,7 +322,7 @@ export function ExamRoom({ examTitle = "AI Foundations Midterm", fullWindow = fa
 
       <div className="exam-room-grid">
         <aside className="question-nav">
-          {examQuestions.map((question, index) => (
+          {questionSet.map((question, index) => (
             <button
               className={`${activeIndex === index ? "active" : ""} ${flagged.includes(question.id) ? "flagged" : ""}`}
               onClick={() => setActiveIndex(index)}
@@ -287,13 +342,13 @@ export function ExamRoom({ examTitle = "AI Foundations Midterm", fullWindow = fa
               {flagged.includes(activeQuestion.id) ? "Unflag" : "Flag for Review"}
             </button>
             <button className="secondary-btn" onClick={() => setActiveIndex(Math.max(activeIndex - 1, 0))}>Previous</button>
-            <button className="primary-btn" onClick={() => setActiveIndex(Math.min(activeIndex + 1, examQuestions.length - 1))}>Next</button>
+            <button className="primary-btn" onClick={() => setActiveIndex(Math.min(activeIndex + 1, questionSet.length - 1))}>Next</button>
             <button className="primary-btn" onClick={submitExam}>Submit Exam</button>
           </div>
         </article>
       </div>
 
-      <p className="muted">Answered {answeredCount} of {examQuestions.length}. Flagged {flagged.length} for review.</p>
+      <p className="muted">Answered {answeredCount} of {questionSet.length}. Flagged {flagged.length} for review.</p>
       {result && (
         <section className="exam-result-panel" aria-label="Exam result">
           <div>

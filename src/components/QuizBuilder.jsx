@@ -1,5 +1,6 @@
 import { useState } from "react";
 import { readJsonResponse } from "../utils/api";
+import { useSavedQuizzes } from "../hooks/useSavedQuizzes";
 
 const questionTypes = [
   { id: "mcq", label: "MCQ" },
@@ -27,6 +28,7 @@ function normalizeQuestion(question) {
 }
 
 export function QuizBuilder({ onToast }) {
+  const [savedQuizzes, quizActions] = useSavedQuizzes();
   const [title, setTitle] = useState("AI Foundations Quiz");
   const [topic, setTopic] = useState("Model evaluation");
   const [questions, setQuestions] = useState([blankQuestion]);
@@ -90,8 +92,36 @@ export function QuizBuilder({ onToast }) {
     }
   }
 
-  function saveQuiz() {
-    onToast(`${title} saved in prototype`);
+  async function saveQuiz() {
+    const validQuestions = questions
+      .map(normalizeQuestion)
+      .filter((question) => question.question.trim());
+
+    if (validQuestions.length === 0) {
+      onToast("Add at least one question before saving the quiz");
+      return;
+    }
+
+    try {
+      await quizActions.addQuiz({
+        title,
+        topic,
+        referenceFile: fileName,
+        questions: validQuestions,
+      });
+      onToast(`${title} saved to MongoDB`);
+    } catch (error) {
+      onToast(error.message);
+    }
+  }
+
+  async function deleteQuiz(quizId) {
+    try {
+      await quizActions.removeQuiz(quizId);
+      onToast("Saved quiz removed from MongoDB");
+    } catch (error) {
+      onToast(error.message);
+    }
   }
 
   return (
@@ -183,6 +213,28 @@ export function QuizBuilder({ onToast }) {
       <div className="question-actions">
         <button className="secondary-btn" onClick={addQuestion}>Add Question</button>
         <button className="primary-btn" onClick={saveQuiz}>Save Quiz</button>
+      </div>
+
+      <div className="saved-quiz-bank">
+        <div className="panel-heading">
+          <div>
+            <p className="eyebrow">Saved Quizzes</p>
+            <h3>Reusable Question Papers</h3>
+          </div>
+          <span className="course-tag">{savedQuizzes.length} saved</span>
+        </div>
+        <div className="mini-list">
+          {savedQuizzes.length === 0 && <p className="muted">Saved quizzes will appear here and can be imported while posting an exam.</p>}
+          {savedQuizzes.map((quiz) => (
+            <div className="mini-item saved-quiz-item" key={quiz.id}>
+              <div>
+                <strong>{quiz.title}</strong>
+                <span>{quiz.topic} · {quiz.questions.length} questions</span>
+              </div>
+              <button className="secondary-btn" onClick={() => deleteQuiz(quiz.id)}>Delete</button>
+            </div>
+          ))}
+        </div>
       </div>
     </section>
   );

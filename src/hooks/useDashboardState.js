@@ -1,13 +1,14 @@
 import { useMemo, useState } from "react";
-import { exams } from "../data/mockData";
+import { useSharedExams } from "./useSharedExams";
 
 export function useDashboardState() {
   const [filter, setFilter] = useState("all");
   const [modalOpen, setModalOpen] = useState(false);
+  const [examList] = useSharedExams();
 
   const filteredExams = useMemo(
-    () => exams.filter((exam) => filter === "all" || exam.course === filter),
-    [filter]
+    () => examList.filter((exam) => filter === "all" || exam.course === filter),
+    [examList, filter]
   );
 
   return {

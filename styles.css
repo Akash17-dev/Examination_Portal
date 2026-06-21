@@ -1859,6 +1859,17 @@ select,
   margin: 18px 0;
 }
 
+.saved-quiz-bank {
+  margin-top: 22px;
+  padding-top: 18px;
+  border-top: 1px solid var(--line);
+}
+
+.saved-quiz-item {
+  grid-template-columns: minmax(0, 1fr) auto;
+  align-items: center;
+}
+
 .quiz-question-card {
   display: grid;
   gap: 12px;

@@ -39,6 +39,8 @@ export function StudentDashboard({ user, onLogout }) {
       <>
         <ExamRoom
           examTitle={activeExam.title}
+          durationMinutes={activeExam.durationMinutes}
+          questions={activeExam.questions}
           fullWindow
           onExit={exitAttempt}
           onToast={pushToast}
