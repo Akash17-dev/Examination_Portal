@@ -1,5 +1,6 @@
 const { callGemini, extractJson } = require("../../server/gemini");
 const { methodNotAllowed, readBody, sendJson } = require("../_utils");
+const { authenticate } = require("../_auth");
 
 function createFallbackQuiz(topic, count) {
   return [
@@ -53,6 +54,9 @@ module.exports = async function handler(request, response) {
     methodNotAllowed(response, ["POST"]);
     return;
   }
+
+  const { user } = await authenticate(request, response, ["faculty", "admin"]);
+  if (!user) return;
 
   const { count, topic, types } = await readBody(request);
   const selectedTypes = Array.isArray(types) && types.length > 0

@@ -1,11 +1,15 @@
 const { callGemini } = require("../../server/gemini");
 const { methodNotAllowed, readBody, sendJson } = require("../_utils");
+const { authenticate } = require("../_auth");
 
 module.exports = async function handler(request, response) {
   if (request.method !== "POST") {
     methodNotAllowed(response, ["POST"]);
     return;
   }
+
+  const { user } = await authenticate(request, response);
+  if (!user) return;
 
   try {
     const { message, role } = await readBody(request);
@@ -17,7 +21,7 @@ module.exports = async function handler(request, response) {
 
     const reply = await callGemini(
       `You are a concise general website chatbot for the LeapStart online examination portal.
-Role: ${role || "student"}.
+Role: ${user.role || role || "student"}.
 Help with navigation, login roles, exam attempts, faculty quiz creation, grading, results, and portal usage.
 Keep the answer short.
 

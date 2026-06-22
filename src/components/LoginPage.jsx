@@ -1,27 +1,22 @@
 import { useState } from "react";
-import { users } from "../data/mockData";
-
 export function LoginPage({ onLogin }) {
   const [role, setRole] = useState("student");
-  const [email, setEmail] = useState("student@leapstart.in");
-  const [password, setPassword] = useState("student123");
+  const [email, setEmail] = useState("");
+  const [password, setPassword] = useState("");
   const [error, setError] = useState("");
   const [isSubmitting, setIsSubmitting] = useState(false);
 
   function switchRole(nextRole) {
-    const demoUser = users.find((user) => user.role === nextRole);
     setRole(nextRole);
-    setEmail(demoUser.email);
-    setPassword(demoUser.password);
     setError("");
   }
 
-  function handleSubmit(event) {
+  async function handleSubmit(event) {
     event.preventDefault();
     setIsSubmitting(true);
 
     try {
-      onLogin({ role, email, password });
+      await onLogin({ role, email, password });
     } catch (loginError) {
       setError(loginError.message);
     } finally {

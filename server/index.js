@@ -1,16 +1,102 @@
 require("dotenv").config();
 
 const cors = require("cors");
+const cookieParser = require("cookie-parser");
 const express = require("express");
+const bcrypt = require("bcryptjs");
 const { closeDatabase, connectToDatabase, getDatabase } = require("./db");
 const { defaultExams } = require("./defaultData");
 const { callGemini, extractJson } = require("./gemini");
+const { COOKIE_NAME, cookieOptions, ensureSeedUsers, getAuthenticatedUser, issueToken, requireAuth, toPublicUser } = require("./auth");
 
 const app = express();
 const port = Number(process.env.PORT || 4000);
 
-app.use(cors({ origin: ["http://localhost:5173", "http://localhost:5174"] }));
+app.use(cors({ origin: ["http://localhost:5173", "http://localhost:5174"], credentials: true }));
+app.use(cookieParser());
 app.use(express.json());
+
+async function authGuard(request, response, next) {
+  const db = await getDatabase();
+  const user = await getAuthenticatedUser(request, db);
+  if (!user) {
+    response.status(401).json({ ok: false, message: "Authentication required." });
+    return;
+  }
+  request.user = user;
+  next();
+}
+
+function allowRoles(...roles) {
+  return (request, response, next) => {
+    if (!roles.includes(request.user.role)) {
+      response.status(403).json({ ok: false, message: "You do not have permission for this action." });
+      return;
+    }
+    next();
+  };
+}
+
+app.post("/api/auth/login", async (request, response) => {
+  try {
+    const { email, password, role } = request.body;
+    const db = await getDatabase();
+    await ensureSeedUsers(db);
+    const user = await db.collection("users").findOne({ email: String(email || "").trim().toLowerCase() });
+
+    if (!user || (role && user.role !== role) || !(await bcrypt.compare(password || "", user.passwordHash))) {
+      response.status(401).json({ ok: false, message: "Invalid email, password, or role." });
+      return;
+    }
+
+    response.cookie(COOKIE_NAME, issueToken(user), cookieOptions());
+    response.json({ ok: true, user: toPublicUser(user) });
+  } catch (error) {
+    response.status(500).json({ ok: false, message: error.message });
+  }
+});
+
+app.post("/api/auth/register", async (request, response) => {
+  try {
+    const { name, email, password } = request.body;
+    if (!name || !email || !password || password.length < 8) {
+      response.status(400).json({ ok: false, message: "Name, email, and a password of at least 8 characters are required." });
+      return;
+    }
+
+    const db = await getDatabase();
+    await ensureSeedUsers(db);
+    const normalizedEmail = String(email).trim().toLowerCase();
+    if (await db.collection("users").findOne({ email: normalizedEmail })) {
+      response.status(409).json({ ok: false, message: "An account already exists for this email." });
+      return;
+    }
+
+    const user = {
+      id: `LST${Date.now()}`,
+      name: String(name).trim(),
+      role: "student",
+      email: normalizedEmail,
+      passwordHash: await bcrypt.hash(password, 12),
+      program: "Computer Science - AI and Data Science",
+      createdAt: new Date().toISOString(),
+    };
+    await db.collection("users").insertOne(user);
+    response.cookie(COOKIE_NAME, issueToken(user), cookieOptions());
+    response.status(201).json({ ok: true, user: toPublicUser(user) });
+  } catch (error) {
+    response.status(500).json({ ok: false, message: error.message });
+  }
+});
+
+app.get("/api/auth/me", authGuard, (request, response) => {
+  response.json({ ok: true, user: request.user });
+});
+
+app.post("/api/auth/logout", (_request, response) => {
+  response.clearCookie(COOKIE_NAME, { ...cookieOptions(), maxAge: undefined });
+  response.json({ ok: true });
+});
 
 app.get("/api/health", async (_request, response) => {
   try {
@@ -32,7 +118,7 @@ app.get("/api/health", async (_request, response) => {
   }
 });
 
-app.get("/api/exams", async (_request, response) => {
+app.get("/api/exams", authGuard, async (_request, response) => {
   try {
     const db = await getDatabase();
     const collection = db.collection("exams");
@@ -47,7 +133,7 @@ app.get("/api/exams", async (_request, response) => {
   }
 });
 
-app.post("/api/exams", async (request, response) => {
+app.post("/api/exams", authGuard, allowRoles("faculty", "admin"), async (request, response) => {
   try {
     const db = await getDatabase();
     const nextExam = {
@@ -63,7 +149,7 @@ app.post("/api/exams", async (request, response) => {
   }
 });
 
-app.delete("/api/exams", async (request, response) => {
+app.delete("/api/exams", authGuard, allowRoles("faculty", "admin"), async (request, response) => {
   try {
     const id = request.query.id;
     if (!id) {
@@ -79,7 +165,7 @@ app.delete("/api/exams", async (request, response) => {
   }
 });
 
-app.get("/api/quizzes", async (_request, response) => {
+app.get("/api/quizzes", authGuard, allowRoles("faculty", "admin"), async (_request, response) => {
   try {
     const db = await getDatabase();
     const quizzes = await db.collection("quizzes").find({}).sort({ createdAt: -1, id: -1 }).limit(100).toArray();
@@ -89,7 +175,7 @@ app.get("/api/quizzes", async (_request, response) => {
   }
 });
 
-app.post("/api/quizzes", async (request, response) => {
+app.post("/api/quizzes", authGuard, allowRoles("faculty", "admin"), async (request, response) => {
   try {
     const db = await getDatabase();
     const nextQuiz = {
@@ -105,7 +191,7 @@ app.post("/api/quizzes", async (request, response) => {
   }
 });
 
-app.delete("/api/quizzes", async (request, response) => {
+app.delete("/api/quizzes", authGuard, allowRoles("faculty", "admin"), async (request, response) => {
   try {
     const id = request.query.id;
     if (!id) {
@@ -121,7 +207,7 @@ app.delete("/api/quizzes", async (request, response) => {
   }
 });
 
-app.post("/api/exams/seed", async (_request, response) => {
+app.post("/api/exams/seed", authGuard, allowRoles("admin"), async (_request, response) => {
   try {
     const db = await getDatabase();
     await db.collection("exams").deleteMany({});
@@ -132,7 +218,7 @@ app.post("/api/exams/seed", async (_request, response) => {
   }
 });
 
-app.post("/api/agent/chat", async (request, response) => {
+app.post("/api/agent/chat", authGuard, async (request, response) => {
   const { message, role } = request.body;
 
   if (!message) {
@@ -160,7 +246,7 @@ User: ${message}`
   }
 });
 
-app.post("/api/agent/create-quiz", async (request, response) => {
+app.post("/api/agent/create-quiz", authGuard, allowRoles("faculty", "admin"), async (request, response) => {
   const { count, topic, types } = request.body;
   const selectedTypes = Array.isArray(types) && types.length > 0
     ? types

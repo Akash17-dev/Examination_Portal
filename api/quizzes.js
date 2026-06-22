@@ -1,8 +1,10 @@
 const { getDatabase } = require("../server/db");
 const { methodNotAllowed, readBody, sendJson } = require("./_utils");
+const { authenticate } = require("./_auth");
 
 module.exports = async function handler(request, response) {
-  const db = await getDatabase();
+  const { db, user } = await authenticate(request, response, ["faculty", "admin"]);
+  if (!user) return;
   const collection = db.collection("quizzes");
 
   if (request.method === "GET") {

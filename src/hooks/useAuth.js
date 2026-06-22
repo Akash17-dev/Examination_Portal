@@ -1,32 +1,43 @@
-import { useState } from "react";
-import { users } from "../data/mockData";
-import { clearSession, getInitialUser, saveSession, withoutPassword } from "../utils/session";
+import { useEffect, useState } from "react";
+import { readJsonResponse } from "../utils/api";
 
 export function useAuth() {
-  const [user, setUser] = useState(getInitialUser);
+  const [user, setUser] = useState(null);
+  const [isLoading, setIsLoading] = useState(true);
 
-  function login({ role, email, password }) {
-    const match = users.find(
-      (candidate) => candidate.role === role && candidate.email === email.trim() && candidate.password === password
-    );
+  useEffect(() => {
+    fetch("/api/auth/me", { credentials: "include" })
+      .then(readJsonResponse)
+      .then((data) => setUser(data.ok ? data.user : null))
+      .catch(() => setUser(null))
+      .finally(() => setIsLoading(false));
+  }, []);
 
-    if (!match) {
-      throw new Error("Invalid mock credentials for the selected role.");
+  async function login({ role, email, password }) {
+    const response = await fetch("/api/auth/login", {
+      method: "POST",
+      credentials: "include",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ role, email, password }),
+    });
+    const data = await readJsonResponse(response);
+
+    if (!data.ok) {
+      throw new Error(data.message || "Login failed.");
     }
 
-    const sessionUser = withoutPassword(match);
-    saveSession(match);
-    setUser(sessionUser);
-    return sessionUser;
+    setUser(data.user);
+    return data.user;
   }
 
-  function logout() {
-    clearSession();
+  async function logout() {
+    await fetch("/api/auth/logout", { method: "POST", credentials: "include" }).catch(() => {});
     setUser(null);
   }
 
   return {
     isAuthenticated: Boolean(user),
+    isLoading,
     login,
     logout,
     user,

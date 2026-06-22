@@ -41,9 +41,10 @@ A role-based examination portal prototype for LeapStart School of Technology. It
 3. Update `.env` with your MongoDB connection details. `GEMINI_API_KEY` is optional; the app returns fallback content when it is not set or Gemini is unreachable.
 
    ```env
-   MONGODB_URI=mongodb+srv://<username>:<password>@<cluster-url>/
-   MONGODB_DB=examination_portal
-   PORT=4000
+  MONGODB_URI=mongodb+srv://<username>:<password>@<cluster-url>/
+  MONGODB_DB=examination_portal
+  JWT_SECRET=<a-long-random-secret>
+  PORT=4000
    GEMINI_API_KEY=<your-gemini-api-key>
    GEMINI_MODEL=gemini-2.5-flash
    ```
@@ -58,7 +59,7 @@ A role-based examination portal prototype for LeapStart School of Technology. It
 
 ## Demo access
 
-These credentials are mock data for local development only. Authentication is client-side and must not be used as production authentication.
+On first login, the API seeds these development accounts into MongoDB with bcrypt password hashes. Login issues a JWT in an httpOnly cookie; the frontend does not persist tokens or user data in localStorage.
 
 | Role | Email | Password |
 | --- | --- | --- |
@@ -90,14 +91,18 @@ These credentials are mock data for local development only. Authentication is cl
 | `DELETE` | `/api/quizzes?id=<id>` | Delete a quiz. |
 | `POST` | `/api/agent/chat` | Send a portal-support question to Gemini. |
 | `POST` | `/api/agent/create-quiz` | Generate quiz questions with Gemini. |
+| `POST` | `/api/auth/login` | Authenticate with a bcrypt-verified password and set the secure session cookie. |
+| `POST` | `/api/auth/register` | Register a student account. |
+| `GET` | `/api/auth/me` | Return the authenticated user from the httpOnly session cookie. |
+| `POST` | `/api/auth/logout` | Clear the session cookie. |
 
 ## Project structure
 
 ```text
 src/
   components/     # Dashboards, exam UI, layout, panels, and chat tools
-  hooks/          # Authentication, dashboard, theme, toast, and data hooks
-  utils/          # Browser storage and API helpers
+  hooks/          # Authentication, dashboard, theme, toast, and Mongo data hooks
+  utils/          # API and data-format helpers
   data/           # Development mock users and dashboard data
 server/
   index.js        # Express routes and application startup
@@ -108,4 +113,4 @@ server/
 
 ## Production notes
 
-This is a prototype. Before deploying it, replace mock client-side authentication with secure server-side authentication and authorization, restrict CORS to your production origin, validate API input, add per-user access controls, and keep all secrets out of source control.
+For Vercel, configure `MONGODB_URI`, `MONGODB_DB`, `JWT_SECRET`, `GEMINI_API_KEY`, and `GEMINI_MODEL` in Project Settings → Environment Variables. Use a new long random `JWT_SECRET` for production and keep all secrets out of source control.

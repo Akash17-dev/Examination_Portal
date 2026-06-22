@@ -1,6 +1,7 @@
 const { getDatabase } = require("../server/db");
 const { defaultExams } = require("../server/defaultData");
 const { methodNotAllowed, readBody, sendJson } = require("./_utils");
+const { authenticate } = require("./_auth");
 
 async function ensureDefaultExams(collection) {
   const count = await collection.countDocuments();
@@ -10,7 +11,9 @@ async function ensureDefaultExams(collection) {
 }
 
 module.exports = async function handler(request, response) {
-  const db = await getDatabase();
+  const roles = request.method === "POST" || request.method === "DELETE" ? ["faculty", "admin"] : undefined;
+  const { db, user } = await authenticate(request, response, roles);
+  if (!user) return;
   const collection = db.collection("exams");
 
   if (request.method === "GET") {
